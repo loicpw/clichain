@@ -1,0 +1,6 @@
+# this file installs required dependencies only
+# (ordered alphabetically)
+click
+
+# secondary dependencies
+# (ordered alphabetically)
