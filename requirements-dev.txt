@@ -3,7 +3,7 @@
 -r requirements.txt
 
 # required for tests:
-coverage
+coverage>=4.4
 pytest
 pytest-cov
 pep8

@@ -12,7 +12,7 @@ setuptools.setup(
     author="Loïc Peron",
     author_email="peronloic.us@gmail.com",
 
-    description="Create a CLI to chain tasks as a pipeline"
+    description="Create a CLI to chain tasks as a pipeline",
 
     long_description='\n\n'.join(
         open(f, 'rb').read().decode('utf-8')
