@@ -11,7 +11,9 @@ matrix:
       sudo: true
 install:
   - pip install -r requirements-dev.txt
-  - pip install python-coveralls
+  # - pip install python-coveralls
+  # workaround : see https://github.com/z4r/python-coveralls/issues/66
+  - pip install python-coveralls 'coverage>=4.4'
 script:
   - cd tests && ( pytest -rXxs -vv --cov-report term-missing --cov clichain )
 after_success:
