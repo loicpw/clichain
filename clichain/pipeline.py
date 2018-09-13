@@ -229,7 +229,7 @@ def task(func):
 
         .. note:: as for `coroutine`, all the functions (partial or
             final functions) are wrapped using `functools.wraps`
-        
+
 
         **example:**
 
