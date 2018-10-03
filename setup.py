@@ -5,7 +5,7 @@ import setuptools
 
 setuptools.setup(
     name="clichain",
-    version="0.0.1",
+    version="0.0.2",
     url="https://github.com/loicpw/clichain",
     download_url = "https://github.com/loicpw/clichain.git",
 
