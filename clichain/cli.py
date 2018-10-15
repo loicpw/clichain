@@ -550,12 +550,19 @@ def _end_debug_name(obj):
         obj['debug_name'] = None
 
 
-def _get_obj(tasks, args, kw):
-    """ TODO: useful for testing with `click.testing.CliRunner`
+def _get_obj(tasks, args, kwargs):
+    """ get *obj* parameter for `click` context
 
-        >>> runner = CliRunner()
-        >>> obj = cli._get_obj(tasks, (), {})
-        >>> result = runner.invoke(cli._app, args, obj=obj)
+        The created *obj* is a dict, it's used internally when
+        processing commands.
+
+        + `tasks` is the `Tasks` factory to use (containing user commands)
+
+        + optional `args` and `kwargs` will be send to the `click`
+          context (in context.obj['args'] and context.obj['kwargs']),
+          they will not be used by the framework.
+
+        This function is used by `app` and `test`.
     """
     output = ()
     return {
@@ -569,7 +576,7 @@ def _get_obj(tasks, args, kw):
         'debug_name': None,
         'index': 0,
         'args': args,
-        'kwargs': kw,
+        'kwargs': kwargs,
         'branch': None,
         'output': output,
     }
@@ -577,6 +584,8 @@ def _get_obj(tasks, args, kw):
 
 def app(tasks, *args, **kw):
     """ run `click` main command: this will start the CLI tool.
+
+        .. seealso:: `test`
 
         `tasks` is the `Tasks` factory to use (containing user commands)
 
@@ -604,6 +613,16 @@ def app(tasks, *args, **kw):
 def test(tasks, clargs, args=None, kwargs=None, **kw):
     """ run the CLI using `click.testing`, intended for automated tests
 
+        .. seealso:: `app`
+
+        The main command is then run with `click.testing.CliRunner`
+
+        this is roughly equivalent to: ::
+
+            >>> runner = click.testing.CliRunner()
+            >>> obj = cli._get_obj(tasks, args, kwargs)
+            >>> result = runner.invoke(cli._app, clargs, obj=obj, **kw)
+
         + `tasks` is the `Tasks` factory to use
           (containing user commands)
 
@@ -611,9 +630,8 @@ def test(tasks, clargs, args=None, kwargs=None, **kw):
           i.e what the user would send in interactive mode.
 
         + optional `args` and `kwargs` will be send to the `click`
-          context (in context.obj['args'] and context.obj['kwargs'])
-
-        .. seealso:: `app`
+          context (in context.obj['args'] and context.obj['kwargs']),
+          they will not be used by the framework.
 
         + extra `kw` will be forwarded to
           `click.testing.CliRunner.invoke`, for example:
