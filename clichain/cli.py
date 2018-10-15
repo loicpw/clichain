@@ -599,3 +599,38 @@ def app(tasks, *args, **kw):
             see also `usage`
     """
     _app(obj=_get_obj(tasks, args, kw))
+
+
+def test(tasks, clargs, args=None, kwargs=None, **kw):
+    """ run the CLI using `click.testing`, intended for automated tests
+
+        + `tasks` is the `Tasks` factory to use
+          (containing user commands)
+
+        + `clargs` is a list containing the command line arguments,
+          i.e what the user would send in interactive mode.
+
+        + optional `args` and `kwargs` will be send to the `click`
+          context (in context.obj['args'] and context.obj['kwargs'])
+
+        .. seealso:: `app`
+
+        + extra `kw` will be forwarded to
+          `click.testing.CliRunner.invoke`, for example:
+
+          ::
+
+             input=[1,2,3], catch_exceptions=False
+
+        creates a `click.testing.CliRunner` to invoke the main command
+        and returns *runner.invoke* result.
+
+        .. seealso:: `click.testing`
+    """
+    from click.testing import CliRunner
+    runner = CliRunner()
+
+    obj = _get_obj(tasks,
+                   () if args is None else args,
+                   {} if kwargs is None else kwargs)
+    return runner.invoke(_app, clargs, obj=obj, **kw)
