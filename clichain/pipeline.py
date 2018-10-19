@@ -371,6 +371,8 @@ def create(tasks, output=print, **kw):
 
         + **task**: the coroutine function to use
 
+          .. seealso:: `task` decorator
+
           the coroutine function will be called with the following
           keyword arguments:
 
@@ -380,12 +382,11 @@ def create(tasks, output=print, **kw):
           + **targets**: an iterable containing the following coroutines
             in the pipeline (default is no targets).
 
-          + **debug**: an optional name used to get a child logger from
-            the `Context` logger, which will be used to log error if an
-            exception occurs. The exception will be logged at error
-            level and the exc_info will be passed to the log record.
-
-            The value will be accessible (and writeable) through
+          + **debug**: an optional name, used by `task` to get a child
+            logger from the `Context` logger, which will be used to log
+            error if an exception occurs. The exception will be logged
+            at error level and the exc_info will be passed to the log
+            record. The value will be accessible (and writeable) through
             `Control.name` attribute, which can be usefull for logging:
 
             ex: ::
@@ -426,7 +427,7 @@ def create(tasks, output=print, **kw):
 
         **examples:**
 
-        .. seealso:: `task`, `coroutine`
+        .. seealso:: `task` and `coroutine` decorators
 
         given we have the following declarations: ::
 

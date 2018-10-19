@@ -589,9 +589,9 @@ def app(tasks, *args, **kw):
 
         `tasks` is the `Tasks` factory to use (containing user commands)
 
-        extra args and kwargs are added to the `click` context (**obj**)
-        as '**args**' and '**kwargs**', they're not used by the
-        framework.
+        extra `args` and `kwargs` are added to the `click` context's
+        **obj** (a dict) as **'args'** and **'kwargs'**, they're not
+        used by the framework.
 
         `app` uses `Cli` which extends `click.MultiCommand` to create
         the main command as a multicommand interface. This main command
@@ -629,7 +629,7 @@ def test(tasks, clargs, args=None, kwargs=None, **kw):
         + `clargs` is a list containing the command line arguments,
           i.e what the user would send in interactive mode.
 
-        + optional `args` and `kwargs` will be send to the `click`
+        + optional `args` and `kwargs` will be sent to the `click`
           context (in context.obj['args'] and context.obj['kwargs']),
           they will not be used by the framework.
 
