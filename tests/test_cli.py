@@ -7,6 +7,7 @@ from click.testing import CliRunner
 import sys
 import ast
 import logging
+import pathlib
 from difflib import SequenceMatcher
 
 
@@ -19,6 +20,123 @@ def test_main_help():
     assert not result.exception
     ratio = SequenceMatcher(None, result.output, cli.usage()).ratio()
     assert ratio >= 0.8
+
+
+@pytest.fixture
+def clear_root_logger():
+    rl = logging.getLogger()
+    handlers = rl.handlers
+    level = rl.level
+    rl.handlers = handlers.copy()
+    yield
+    rl.setLevel(level)
+    rl.handlers = handlers
+     
+
+def run_logging_config(log_options, test_name):
+    # make sure root logger has at least one handler attached
+    rl = logging.getLogger()
+    rl.setLevel(logging.WARNING)
+    hdlr = logging.NullHandler()
+    rl.addHandler(hdlr)
+
+    # define task
+    tasks = cli.Tasks()
+
+    logger = logging.getLogger('run_logging_config')
+    
+    @pipeline.task
+    def compute_task(ctrl):
+        logger.info('info level log')
+        logger.debug('debug level log')
+        logger.warning('warning level log')
+        with ctrl:
+            while True:
+                yield
+
+    @tasks
+    @click.command(name='compute')
+    def compute_task_cli():
+        return compute_task()
+    
+    inputs = '1\n2\n3\n' 
+    
+    # default log level
+    args = list(log_options) + ['compute']
+    result = cli.test(tasks, args, input=inputs, catch_exceptions=False)
+    print(f'>> {test_name}:\n', result.output, file=sys.stderr)
+    assert result.exit_code == 0
+    assert not result.exception
+    return result
+
+
+def test_logging_config_default(clear_root_logger):
+    log_options = []
+    test_name = 'test_logging_config_default'
+    result = run_logging_config(log_options, test_name)
+    assert "warning level log" in result.output
+    assert "info level log" not in result.output
+    assert "debug level log" not in result.output
+
+
+def test_logging_config_verbose(clear_root_logger):
+    log_options = ['-v']
+    test_name = 'test_logging_config_verbose'
+    result = run_logging_config(log_options, test_name)
+    assert "warning level log" in result.output
+    assert "info level log" in result.output
+    assert "debug level log" not in result.output
+
+
+def test_logging_config_debug(clear_root_logger):
+    log_options = ['-vv']
+    test_name = 'test_logging_config_debug'
+    result = run_logging_config(log_options, test_name)
+    assert "warning level log" in result.output
+    assert "info level log" in result.output
+    assert "debug level log" in result.output
+
+
+def test_logging_config_use_logfile_default(tmpdir, clear_root_logger):
+    tmp = tmpdir.mkdir("test_logging")
+    tmpf = pathlib.Path(tmp) / 'log_default'
+
+    log_options = ['--logfile', str(tmpf)]
+    test_name = 'test_logging_config_use_logfile_default'
+    result = run_logging_config(log_options, test_name)
+    with open(tmpf) as f:
+        logs = f.read()
+
+    print('\ntest_logging_config_use_logfile_default: logs:', file=sys.stderr)
+    print(logs, file=sys.stderr)
+
+    assert "warning level log" not in result.output
+    assert "info level log" not in result.output
+    assert "debug level log" not in result.output
+    assert "warning level log" in logs
+    assert "info level log" not in logs
+    assert "debug level log" not in logs
+
+
+def test_logging_config_use_logfile_debug(tmpdir, clear_root_logger):
+    tmp = tmpdir.mkdir("test_logging")
+    tmpf = pathlib.Path(tmp) / 'log_debug'
+
+    log_options = ['-vv', '--logfile', str(tmpf)]
+    test_name = 'test_logging_config_use_logfile_debug'
+    result = run_logging_config(log_options, test_name)
+    with open(tmpf) as f:
+        logs = f.read()
+
+    print('\ntest_logging_config_use_logfile_debug: logs:', file=sys.stderr)
+    print(logs, file=sys.stderr)
+
+    assert "warning level log" not in result.output
+    assert "info level log" not in result.output
+    assert "debug level log" not in result.output
+    assert "warning level log" in logs
+    assert "info level log" in logs
+    assert "debug level log" in logs
 
 
 def test_basic_single_task_help():
@@ -254,7 +372,7 @@ finished F (coroutine name: 5)
 """
 
 
-def test_pipeline_debug_name(caplog):
+def test_pipeline_debug_name(caplog, tmpdir, clear_root_logger):
     """
                    +--> B --> C --+
         inp >>> A--|              +--> B >>> out
@@ -276,6 +394,7 @@ def test_pipeline_debug_name(caplog):
         #no effect:
         =>> A [ { 'b1' } B , { 'b2' } B ] B
     """
+    tmp = tmpdir.mkdir("test_pipeline_debug_name")
     inputs = '\n'.join('12345678')
     name = 'test_pipeline_debug_name'
 
@@ -283,6 +402,8 @@ def test_pipeline_debug_name(caplog):
         print('', file=sys.stderr)
         err_name = err_name.format(NAME=f'{ex}_{i}')
         args = args.format(NAME=f'{ex}_{i}')
+        tmpf = pathlib.Path(tmp) / f'{ex}_{i}'
+        args = f'--logfile {tmpf} {args}'
         test = _get_pipeline(args, inputs, err_msg=err_name)
         result = test()
         # abort:
@@ -293,6 +414,9 @@ def test_pipeline_debug_name(caplog):
         print(result.output, file=sys.stderr)
         assert result.output == stdout.format(NAME=f'{ex}_{i}')
 
+        print(f'\n>> {name}-{ex}#{i}: logfile:', file=sys.stderr)
+        with open(tmpf) as f:
+            print(f.read(), file=sys.stderr)
         
         print(f'\n>> {name}-{ex}#{i}: logs:', file=sys.stderr)
         _logger = pipeline.logger.getChild(err_name)

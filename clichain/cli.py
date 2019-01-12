@@ -423,9 +423,20 @@ def _app(ctx, logfile, verbose):
         2: logging.DEBUG,
     }
     loglevel = log_levels.get(verbose, logging.DEBUG)
+
+    rl = logging.getLogger()
+    rl.setLevel(loglevel)
+
+    if logfile:
+        hdlr = logging.FileHandler(logfile)
+    else:
+        hdlr = logging.StreamHandler(stream=sys.stderr)
+
+    hdlr.setLevel(loglevel)
     # TODO more flexible logging config
-    logging.basicConfig(format='%(name)s: %(levelname)s: %(message)s',
-                        level=loglevel, filename=logfile)
+    hdlr_formatter = logging.Formatter('%(name)s: %(levelname)s: %(message)s')
+    hdlr.setFormatter(hdlr_formatter)
+    rl.addHandler(hdlr)
 
     tasks = ctx.obj['tasks']
     tasks.context = ctx
